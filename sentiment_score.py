@@ -11,26 +11,37 @@ from nltk.sentiment import vader
 
 Plot = Tuple[Figure, Axes]
 RGBColor = Tuple[float, float, float]
+ScoreDict = Dict[str, float]
 
 
 class SentimentScore:
     """Vader sentiment score."""
     analyzer = vader.SentimentIntensityAnalyzer()
 
-    def __init__(self, text):
+    def __init__(self, text: str, score: ScoreDict=None) -> None:
         """Create a new sentiment score."""
+        if score is None:
+            score = SentimentScore.analyzer.polarity_scores(text)
         self.text = text
-        self.score = SentimentScore.analyzer.polarity_scores(text)
-        self.color = self._get_sentiment_color()
+        self.score = score
+
+    def __repr__(self) -> str:
+        """Return a serialized, machine-readable representation of self."""
+        return f"SentimentScore({repr(self.text)}, score={repr(self.score)})"
+
+    def __str__(self) -> str:
+        """Return a human-readable string representation of self."""
+        return '\n'.join((repr(self), repr(self.score)))
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary including, sentiment scores and bar color."""
-        score = self.score.copy()
+        score: Dict[str, Any] = self.score.copy()
         score['color'] = self.color
         score['text'] = self.text
         return score
 
-    def _get_sentiment_color(self) -> RGBColor:
+    @property
+    def color(self) -> RGBColor:
         """Return (red, green, blue) indicating sentiment."""
         red = self.score['neg']
         green = self.score['pos']
